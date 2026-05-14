@@ -1,0 +1,48 @@
+---
+title: "Lizard Markdown"
+author: "StellaRaymond"
+date: "2026-05-14"
+output: html_document
+---
+
+```{r setup}
+#The following code was not written by the group. Credit goes to Scott
+required_packages <-function(...) { 
+  libs<-unlist(list(...)) 
+  req<-suppressMessages(suppressWarnings(unlist(lapply(libs,require,character.only=TRUE)))) 
+  need<-libs[req==FALSE] 
+  if(length(need)>0){ 
+    install.packages(need, repos = "http://cran.us.r-project.org") 
+    lapply(need, library, character.only=TRUE) 
+  }
+  else{message("No packages required installation.")} 
+}
+
+required_packages("tidyverse", "readxl")
+```
+
+
+```{r Data}
+HOBO_data_half_hour <- read_xlsx("Ambient_Data.xlsx") |> 
+  select(!c(Season, Time))
+PRISM_data <- read.csv("PRISM.csv", skip = 10) |> 
+  dplyr::rename(Elevation = Elevation..ft.,
+                Temp_avg = tmean..degrees.F.,
+                Temp_max = tmax..degrees.F.,
+                Temp_min = tmin..degrees.F.)
+```
+
+
+
+```{r Daily-Average}
+HOBO_data <- HOBO_data_half_hour |> 
+  group_by(MonthDayYear, Site, Campus, Month) |> 
+  summarize(Temp_avg = mean(Temperature),
+            Temp_min = min(Temperature), 
+            Temp_max = max(Temperature),
+            .groups = "drop_last") |> 
+  ungroup()
+
+```
+
+
