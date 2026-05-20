@@ -46,3 +46,15 @@ HOBO_data <- HOBO_data_half_hour |>
 ```
 
 
+
+```{r}
+
+ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_min))+
+  geom_point()
+
+
+
+```
+
+
+
