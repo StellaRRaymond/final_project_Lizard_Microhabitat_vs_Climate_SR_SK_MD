@@ -38,26 +38,29 @@ Develop a function to filter data points were hobo logger was experiencing direc
 Develop a function for making maps for campuses where temperature biologgers were deployed
 
 7.) Project updates
-#Week 8 
-- Built code for importing data: 
+
+Week 8.)
+Built code for importing data: 
     Calculated daily min, max, and averages for HOBO data
-- Built code for cleaning data: 
+Built code for cleaning data: 
     cleaned both data sets (HOBO and PRISM). Renamed column headers so they matched. Turned columns into proper date format
-- Data join PRISM and HOBO data
-- Built code for processing data (temperature conversion, calculating averages)
+Data join PRISM and HOBO data
+Built code for processing data (temperature conversion, calculating averages)
     created function for converting Farenheit to celsius for the entire dataset
-- Began statistical analysis (ANOVA for between sites, T-test for between PRISM and HOBO logger groups)
-- LGM for including elevation and site as variables
-- Started making a figure for report/presentation
-#Week 9
-- Finalize statistical analysis 
-- Interpret statistical test
-- Build maps
-#Week 10
-	- Wrap up loose ends
-	- Clean up code
-	- Finalize QMD 
-	- Sort out github
+Began statistical analysis (ANOVA for between sites, T-test for between PRISM and HOBO logger groups)
+LGM for including elevation and site as variables
+Started making a figure for report/presentation
+
+Week 9.)
+Finalize statistical analysis 
+Interpret statistical test
+Build maps
+
+Week 10.)
+Wrap up loose ends
+Clean up code
+Finalize QMD 
+Sort out github
 
 8.) Literature cited
 O’Donnell, M.S., and Ignizio, D.A., 2012, Bioclimatic predictors for supporting ecological applications in the conterminous United States: U.S. Geological Survey Data Series 691, 10 p.
