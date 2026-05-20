@@ -47,12 +47,13 @@ HOBO_data <- HOBO_data_half_hour |>
 
 
 
-```{r}
+```{r graphs}
 
-ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_min))+
+ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_min, color = Campus))+
   geom_point()
 
-
+ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_max, color = Campus))+
+  geom_point()
 
 ```
 
