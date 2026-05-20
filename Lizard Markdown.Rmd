@@ -21,39 +21,69 @@ required_packages <-function(...) {
 required_packages("tidyverse", "readxl")
 ```
 
+```{r}
+f_to_c <- function(Far) {
+  Cel <- ((Far-32)* (5/9))
+  return(Cel)
+}
+```
+
 
 ```{r Data}
 HOBO_data_half_hour <- read_xlsx("Ambient_Data.xlsx") |> 
-  select(!c(Season, Time))
+  select(!c(Season, Time, Month))
 PRISM_data <- read.csv("PRISM.csv", skip = 10) |> 
   dplyr::rename(Elevation = Elevation..ft.,
                 Temp_avg = tmean..degrees.F.,
                 Temp_max = tmax..degrees.F.,
-                Temp_min = tmin..degrees.F.)
+                Temp_min = tmin..degrees.F., 
+                Campus = Name) |> 
+  mutate(Origin = "PRISM",
+         Temp_avg = f_to_c(Temp_avg),
+         Temp_min = f_to_c(Temp_min),
+         Temp_max = f_to_c(Temp_max))
 ```
-
-
 
 ```{r Daily-Average}
 HOBO_data <- HOBO_data_half_hour |> 
-  group_by(MonthDayYear, Site, Campus, Month) |> 
+  group_by(MonthDayYear, Site, Campus) |> 
   summarize(Temp_avg = mean(Temperature),
             Temp_min = min(Temperature), 
             Temp_max = max(Temperature),
             .groups = "drop_last") |> 
-  ungroup()
+  dplyr::rename(Date = MonthDayYear) |> 
+  ungroup() |> 
+  as.data.frame() |> 
+  mutate(Date = as.character(Date),
+         Origin = "HOBO")
 
 ```
 
 
-
 ```{r graphs}
 
-ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_min, color = Campus))+
+ggplot(HOBO_data, aes(x = Date, y = Temp_min, color = Campus))+
   geom_point()
 
-ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_max, color = Campus))+
+ggplot(HOBO_data, aes(x = Date, y = Temp_max, color = Campus))+
   geom_point()
+
+```
+
+
+```{r join}
+Temp_all <- HOBO_data |> 
+  full_join(PRISM_data, 
+            by = c("Date", "Campus", "Origin", "Temp_avg", "Temp_min", "Temp_max"))
+
+```
+
+
+```{r}
+ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Campus, shape = Origin
+                     ))+
+  geom_point()
+
 
 ```
 
