@@ -5,6 +5,23 @@ date: "2026-05-14"
 output: html_document
 ---
 
+```{r packages from lab 5}
+
+#| message: FALSE
+
+#required_packages("tidyverse","auk","rebird","sf","terrainr")
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("auk")
+library(auk)
+#install.packages("rebird")
+library(rebird)
+#install.packages("sf")
+library(sf)
+#install.packages("terrainr")
+library(terrainr)
+```
+
 ```{r setup}
 #The following code was not written by the group. Credit goes to Scott
 required_packages <-function(...) { 
@@ -98,8 +115,21 @@ ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Origin_sp,
 
 ```
 
-```{r}
-code
+```{r sages-attempt-at-mapping}
+
+#slo_county_ebird_rich
+lizard_geo <- st_as_sf(Temp_all,coords=c(x="Latitude",y="Longitude"),crs="WGS84") #Converts a regular dataframe → sf (simple features) object
+
+slo_county_ebird_geo_buf <- slo_county_ebird_geo |> st_buffer(dist = 5000)
+
+slo_county_tiles <- get_tiles(slo_county_ebird_geo_buf, services = "USGSTopo", resolution = 200) #Downloads map imagery (tiles) for your spatial extent
+
+ggplot() +
+  geom_spatial_rgb(data = slo_county_tiles$USGSTopo, mapping = aes(x, y, r = red, g = green, b = blue)) +
+  geom_sf(data = slo_county_ebird_geo, aes(size = Species_Richness, color = Species_Richness), alpha = .75) +
+  scale_color_gradient(low = "lightpink", high = "darkred", guide = "none")+
+  labs(title = "Avian Species Richness in SLO County", 
+       caption="Recent eBird observations from SLO county using ebirdregion function")
 ```
 
 
