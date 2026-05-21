@@ -18,7 +18,7 @@ required_packages <-function(...) {
   else{message("No packages required installation.")} 
 }
 
-required_packages("tidyverse", "readxl", "lmerTest", "auk", "terrainr", "ggrepel")
+required_packages("tidyverse", "readxl", "lmerTest", "auk", "terrainr", "ggrepel", "sf", "rebird")
 
 sites <- data.frame(
   Campus = c("SDSU", "CSUSM", "CSUSB", "CSULB", "Cal Poly SLO", "UCLA", "Whitter","Scripps", "Harvey Mudd", "CLU", "Pepperdine"),
@@ -115,7 +115,7 @@ ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,
 #slo_county_ebird_rich
 lizard_geo <- st_as_sf(sites,coords=c(x="Longitude",y="Latitude"),crs="WGS84") #Converts a regular dataframe → sf (simple features) object
 
-lizard_geo_buf <- lizard_geo |> st_buffer(dist = 50000)
+lizard_geo_buf <- lizard_geo |> st_buffer(dist = 2000)
 
 lizard_tiles <- get_tiles(lizard_geo_buf, services = "USGSTopo", resolution = 200) #Downloads map imagery (tiles) for your spatial extent
 
@@ -124,11 +124,7 @@ ggplot() +
   geom_sf(data = lizard_geo, alpha = .75) +
   labs(title = "xxx", 
        caption="yyy") +
-  geom_label_repel(
-    data = Campus,
-    
-    
-  )
+  geom_label_repel(data = sites, aes(label = Campus, x = Longitude, y = Latitude), size = 3, box.padding = .5)
 ```
 
 
