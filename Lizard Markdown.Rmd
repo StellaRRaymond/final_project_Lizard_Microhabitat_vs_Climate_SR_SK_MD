@@ -36,7 +36,7 @@ required_packages <-function(...) {
   else{message("No packages required installation.")} 
 }
 
-required_packages("tidyverse", "readxl")
+required_packages("tidyverse", "readxl", "lmerTest")
 
 sites <- data.frame(
   Campus = c("SDSU", "CSUSM", "CSUSB", "CSULB", "Cal Poly SLO", "UCLA", "Whitter","Scripps", "Harvey Mudd", "CLU", "Pepperdine"),
@@ -91,10 +91,12 @@ HOBO_data <- HOBO_data |>
 ```{r graphs}
 
 ggplot(HOBO_data, aes(x = Date, y = Temp_min, color = Campus))+
-  geom_point()
+  geom_point()+
+  theme_bw()
 
 ggplot(HOBO_data, aes(x = Date, y = Temp_max, color = Campus))+
-  geom_point()
+  geom_point()+
+  theme_bw()
 
 ```
 
@@ -112,12 +114,22 @@ Temp_all <- HOBO_data |>
 ```{r}
 ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Origin_sp,
                      ))+
-  geom_point()
+  geom_point()+
+  theme_bw()
 
+ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,
+                     ))+
+  geom_point()+
+  theme_bw()
+
+ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,
+                     ))+
+  geom_point()+
+  theme_bw()
 ```
 
-```{r sages-attempt-at-mapping}
 
+```{r sages-attempt-at-mapping}
 #slo_county_ebird_rich
 lizard_geo <- st_as_sf(sites,coords=c(x="Longitude",y="Latitude"),crs="WGS84") #Converts a regular dataframe → sf (simple features) object
 
@@ -136,5 +148,20 @@ ggplot() +
     
   )
 ```
+
+
+```{r anova}
+lmer_avg <- lmer(Temp_avg ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+lmer_min <- lmer(Temp_min ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+lmer_max <- lmer(Temp_max ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+
+anova(lmer_avg)
+anova(lmer_min)
+anova(lmer_max)
+```
+
 
 
