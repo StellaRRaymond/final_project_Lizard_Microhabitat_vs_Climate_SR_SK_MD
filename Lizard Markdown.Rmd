@@ -18,43 +18,173 @@ required_packages <-function(...) {
   else{message("No packages required installation.")} 
 }
 
-required_packages("tidyverse", "readxl")
+required_packages("tidyverse", "readxl", "lmerTest", "auk", "terrainr", "ggrepel")
+
+sites <- data.frame(
+  Campus = c("SDSU", "CSUSM", "CSUSB", "CSULB", "Cal Poly SLO", "UCLA", "Whitter","Scripps", "Harvey Mudd", "CLU", "Pepperdine"),
+  Latitude  = c(32.77466, 33.12919, 34.18227, 33.78210, 35.30927, 34.07142, 33.97764, 34.10376, 34.10604, 34.22781, 34.04022),
+  Longitude = c(-117.07259, -117.15697, -117.31864, -118.11464, -120.66155, -118.44289, -118.02909, -117.71214, -117.70854, -118.87794, -118.70718)
+)
 ```
 
+```{r temp-conversion}
+f_to_c <- function(Far) {
+  Cel <- ((Far-32)* (5/9))
+  return(Cel)
+}
+```
 
 ```{r Data}
 HOBO_data_half_hour <- read_xlsx("Ambient_Data.xlsx") |> 
-  select(!c(Season, Time))
+  select(!c(Season, Time, Month))
 PRISM_data <- read.csv("PRISM.csv", skip = 10) |> 
   dplyr::rename(Elevation = Elevation..ft.,
                 Temp_avg = tmean..degrees.F.,
                 Temp_max = tmax..degrees.F.,
-                Temp_min = tmin..degrees.F.)
+                Temp_min = tmin..degrees.F., 
+                Campus = Name) |> 
+  mutate(Origin = "PRISM",
+         Temp_avg = f_to_c(Temp_avg),
+         Temp_min = f_to_c(Temp_min),
+         Temp_max = f_to_c(Temp_max),
+         Date = ymd(Date))
 ```
-
-
 
 ```{r Daily-Average}
 HOBO_data <- HOBO_data_half_hour |> 
-  group_by(MonthDayYear, Site, Campus, Month) |> 
+  group_by(MonthDayYear, Site, Campus) |> 
   summarize(Temp_avg = mean(Temperature),
             Temp_min = min(Temperature), 
             Temp_max = max(Temperature),
             .groups = "drop_last") |> 
-  ungroup()
+  dplyr::rename(Date = MonthDayYear) |> 
+  ungroup() |> 
+  as.data.frame() |> 
+  mutate(Date = ymd(Date),
+         Origin = "HOBO")
+
+HOBO_data <- HOBO_data |> 
+  left_join(sites, 
+            by = "Campus")
 
 ```
 
+
+```{r graphs}
+
+ggplot(HOBO_data, aes(x = Date, y = Temp_min, color = Campus))+
+  geom_point()+
+  theme_bw()
+
+ggplot(HOBO_data, aes(x = Date, y = Temp_max, color = Campus))+
+  geom_point()+
+  theme_bw()
+
+```
+
+
+```{r join}
+Temp_all <- HOBO_data |> 
+  full_join(PRISM_data, 
+            by = c("Date", "Campus", "Origin", "Temp_avg", "Temp_min", "Temp_max", "Latitude", "Longitude")) |> 
+  mutate(Origin_sp = paste(Origin, Site, sep = "_"),
+         Origin_sp = str_replace(Origin_sp, "_NA", ""))
+  
+```
 
 
 ```{r}
+ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Origin_sp,
+                     ))+
+  geom_point()+
+  theme_bw()
 
-ggplot(HOBO_data, aes(x = MonthDayYear, y = Temp_min))+
-  geom_point()
+ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,
+                     ))+
+  geom_point()+
+  theme_bw()
 
-
-
+ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,
+                     ))+
+  geom_point()+
+  theme_bw()
 ```
 
 
+```{r sages-attempt-at-mapping}
+#slo_county_ebird_rich
+lizard_geo <- st_as_sf(sites,coords=c(x="Longitude",y="Latitude"),crs="WGS84") #Converts a regular dataframe → sf (simple features) object
+
+lizard_geo_buf <- lizard_geo |> st_buffer(dist = 50000)
+
+lizard_tiles <- get_tiles(lizard_geo_buf, services = "USGSTopo", resolution = 200) #Downloads map imagery (tiles) for your spatial extent
+
+ggplot() +
+  geom_spatial_rgb(data = lizard_tiles$USGSTopo, mapping = aes(x, y, r = red, g = green, b = blue)) +
+  geom_sf(data = lizard_geo, alpha = .75) +
+  labs(title = "xxx", 
+       caption="yyy") +
+  geom_label_repel(
+    data = Campus,
+    
+    
+  )
+```
+
+
+```{r anova}
+lmer_avg <- lmer(Temp_avg ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+lmer_min <- lmer(Temp_min ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+lmer_max <- lmer(Temp_max ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
+                 data = Temp_all)
+
+anova(lmer_avg)
+anova(lmer_min)
+anova(lmer_max)
+```
+
+```{r}
+library(sf)
+library(tidyterra)  # for geom_spatial_rgb
+library(maptiles)   # for get_tiles
+library(ggplot2)
+
+# Step 1: Convert to sf
+PRISM_sf <- PRISM_data %>%
+  group_by(Name, Longitude, Latitude, Elevation) %>%
+  summarise(
+    Temp_avg = mean(Temp_avg, na.rm = TRUE),
+    Temp_min = mean(Temp_min, na.rm = TRUE),
+    Temp_max = mean(Temp_max, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+
+# Step 2: Buffer around points to define map extent
+PRISM_sf_buf <- PRISM_sf |> st_buffer(dist = 5000)
+
+# Step 3: Get topo tiles
+hobo_tiles <- get_tiles(PRISM_sf_buf, provider = "USGSTopo", resolution = 150)
+
+# Step 4: Plot
+ggplot() +
+  geom_spatial_rgb(
+    data = hobo_tiles$USGSTopo,
+    mapping = aes(x, y, r = red, g = green, b = blue)
+  ) +
+  geom_sf(
+    data = PRISM_sf,
+    aes(color = Temp_avg, size = Temp_avg),
+    alpha = 0.75
+  ) +
+  scale_color_gradient(low = "lightblue", high = "darkred",
+                       name = "Avg Temp (°F)") +
+  scale_size_continuous(guide = "none") +
+  geom_sf_label(data = PRISM_sf, aes(label = Name),
+                nudge_y = 0.1, size = 3) +
+  labs(title = "Locations of PRISM Loggers") +
+  theme_minimal()
+```
 
