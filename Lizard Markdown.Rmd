@@ -122,13 +122,14 @@ lizard_tiles <- get_tiles(lizard_geo_buf, services = "USGSTopo", resolution = 20
 ggplot() +
   geom_spatial_rgb(data = lizard_tiles$USGSTopo, mapping = aes(x, y, r = red, g = green, b = blue)) +
   geom_sf(data = lizard_geo, alpha = .75) +
-  labs(title = "xxx", 
-       caption="yyy") +
+  labs(title = "Campus Locations with HOBOs and PRISM Climate Data", 
+       caption="Locations of HOBO temperature loggers and requested PRISM climate data. Coordinates of campus locations with HOBOs deployed were entered into PRISM database to receive minimum, maximum, and average daily temperatures") +
   geom_label_repel(data = sites, aes(label = Campus, x = Longitude, y = Latitude), size = 3, box.padding = .5)
 ```
 
 
-```{r anova}
+
+```{r ANOVA and table}
 lmer_avg <- lmer(Temp_avg ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
                  data = Temp_all)
 lmer_min <- lmer(Temp_min ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
@@ -139,48 +140,48 @@ lmer_max <- lmer(Temp_max ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
 anova(lmer_avg)
 anova(lmer_min)
 anova(lmer_max)
-```
 
-```{r}
-library(sf)
-library(tidyterra)  # for geom_spatial_rgb
-library(maptiles)   # for get_tiles
-library(ggplot2)
+#beginning of sage's code for table
+library(lme4)
+library(lmerTest)
+library(broom.mixed)
+library(dplyr)
+library(kableExtra)
 
-# Step 1: Convert to sf
-PRISM_sf <- PRISM_data %>%
-  group_by(Name, Longitude, Latitude, Elevation) %>%
-  summarise(
-    Temp_avg = mean(Temp_avg, na.rm = TRUE),
-    Temp_min = mean(Temp_min, na.rm = TRUE),
-    Temp_max = mean(Temp_max, na.rm = TRUE),
-    .groups = "drop"
+avg_anova_df <- data.frame(anova(lmer_avg))
+min_anova_df <- data.frame(anova(lmer_min))
+max_anova_df <- data.frame(anova(lmer_max))
+
+anova_results_df <- rbind(avg_anova_df, min_anova_df, max_anova_df)
+
+anova_results_df <- cbind(
+  Term = rownames(anova_results_df),
+  anova_results_df
+)
+
+rownames(anova_results_df) <- NULL
+
+anova_results_df %>%
+  kable("html", 
+        digits = 3,
+          col.names = c(
+      "Term",
+      "Sum Sq",
+      "Mean Sq",
+      "Num DF",
+      "Den DF",
+      "F - value",
+      "P - value"
+    )) %>%
+  kable_styling(
+    bootstrap_options = "striped",
+    full_width = FALSE
   ) %>%
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+  pack_rows("Average temperature", 1, nrow(avg_anova_df)) %>%
+  pack_rows("Minimum temperature", nrow(avg_anova_df) + 1,
+            nrow(avg_anova_df) + nrow(min_anova_df)) %>%
+  pack_rows("Maximum temperature", nrow(avg_anova_df) + nrow(min_anova_df) + 1,
+            nrow(anova_results_df))
 
-# Step 2: Buffer around points to define map extent
-PRISM_sf_buf <- PRISM_sf |> st_buffer(dist = 5000)
-
-# Step 3: Get topo tiles
-hobo_tiles <- get_tiles(PRISM_sf_buf, provider = "USGSTopo", resolution = 150)
-
-# Step 4: Plot
-ggplot() +
-  geom_spatial_rgb(
-    data = hobo_tiles$USGSTopo,
-    mapping = aes(x, y, r = red, g = green, b = blue)
-  ) +
-  geom_sf(
-    data = PRISM_sf,
-    aes(color = Temp_avg, size = Temp_avg),
-    alpha = 0.75
-  ) +
-  scale_color_gradient(low = "lightblue", high = "darkred",
-                       name = "Avg Temp (°F)") +
-  scale_size_continuous(guide = "none") +
-  geom_sf_label(data = PRISM_sf, aes(label = Name),
-                nudge_y = 0.1, size = 3) +
-  labs(title = "Locations of PRISM Loggers") +
-  theme_minimal()
 ```
 
