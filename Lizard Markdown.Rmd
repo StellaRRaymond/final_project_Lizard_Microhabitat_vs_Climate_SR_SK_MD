@@ -141,46 +141,5 @@ anova(lmer_min)
 anova(lmer_max)
 ```
 
-```{r}
-library(sf)
-library(tidyterra)  # for geom_spatial_rgb
-library(maptiles)   # for get_tiles
-library(ggplot2)
 
-# Step 1: Convert to sf
-PRISM_sf <- PRISM_data %>%
-  group_by(Name, Longitude, Latitude, Elevation) %>%
-  summarise(
-    Temp_avg = mean(Temp_avg, na.rm = TRUE),
-    Temp_min = mean(Temp_min, na.rm = TRUE),
-    Temp_max = mean(Temp_max, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
-
-# Step 2: Buffer around points to define map extent
-PRISM_sf_buf <- PRISM_sf |> st_buffer(dist = 5000)
-
-# Step 3: Get topo tiles
-hobo_tiles <- get_tiles(PRISM_sf_buf, provider = "USGSTopo", resolution = 150)
-
-# Step 4: Plot
-ggplot() +
-  geom_spatial_rgb(
-    data = hobo_tiles$USGSTopo,
-    mapping = aes(x, y, r = red, g = green, b = blue)
-  ) +
-  geom_sf(
-    data = PRISM_sf,
-    aes(color = Temp_avg, size = Temp_avg),
-    alpha = 0.75
-  ) +
-  scale_color_gradient(low = "lightblue", high = "darkred",
-                       name = "Avg Temp (°F)") +
-  scale_size_continuous(guide = "none") +
-  geom_sf_label(data = PRISM_sf, aes(label = Name),
-                nudge_y = 0.1, size = 3) +
-  labs(title = "Locations of PRISM Loggers") +
-  theme_minimal()
-```
 
