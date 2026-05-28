@@ -148,14 +148,14 @@ lizard_tiles <- get_tiles(lizard_geo_buf, services = "USGSTopo", resolution = 20
 ggplot() +
   geom_spatial_rgb(data = lizard_tiles$USGSTopo, mapping = aes(x, y, r = red, g = green, b = blue)) +
   geom_sf(data = lizard_geo, alpha = .75) +
-  labs(title = "xxx", 
-       caption="yyy") +
-  geom_label_repel(data = sites, aes(label = Campus, x = Longitude, y = Latitude), size = 3, box.padding = .5)+
- 
+  labs(title = "Campus Locations with HOBOs and PRISM Climate Data", 
+       caption="Locations of HOBO temperature loggers and requested PRISM climate data. Coordinates of campus locations with HOBOs deployed were entered into PRISM database to receive minimum, maximum, and average daily temperatures") +
+  geom_label_repel(data = sites, aes(label = Campus, x = Longitude, y = Latitude), size = 3, box.padding = .5)
 ```
 
 
-```{r anova}
+
+```{r ANOVA and table}
 lmer_avg <- lmer(Temp_avg ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
                  data = Temp_all)
 lmer_min <- lmer(Temp_min ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
@@ -166,7 +166,6 @@ lmer_max <- lmer(Temp_max ~ Origin_sp + (1|Campus) + (1|Origin_sp:Campus),
 anova(lmer_avg)
 anova(lmer_min)
 anova(lmer_max)
-```
 
 
 
