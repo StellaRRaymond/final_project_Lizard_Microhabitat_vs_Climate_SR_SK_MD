@@ -1,6 +1,6 @@
 ---
 title: "Lizard Markdown"
-author: "StellaRaymond"
+author: "Stella Raymond, Sage Kruleski, and Monique DeMalteris "
 date: "2026-05-14"
 output: html_document
 ---
@@ -26,8 +26,8 @@ sites <- data.frame(
   Longitude = c(-117.07259, -117.15697, -117.31864, -118.11464, -120.66155, -118.44289, -118.02909, -117.71214, -117.70854, -118.87794, -118.70718)
 )
 ```
-![Western Fence Lizzard (*Sceloporus occidentalis*) overlooking his kingdom. Photo Credit:James Maughn, LA Times](western_fence_liz.jpeg){width="300"} 
 
+![Western Fence Lizzard (*Sceloporus occidentalis*) overlooking his kingdom. Photo Credit:James Maughn, LA Times](western_fence_liz.jpeg){width="300"} 
 
 ```{r temp-conversion}
 f_to_c <- function(Far) {
@@ -84,7 +84,7 @@ ggplot(HOBO_data, aes(x = Date, y = Temp_min, color = Campus))+
 
 ggplot(HOBO_data, aes(x = Date, y = Temp_max, color = Campus))+
   geom_point()+
-  theme_bw()+
+ theme_bw()+
   labs( title= "Maximum Temperature at Each University",
         x= "Date", 
         y= "Maximum Temperature in Celsius")+
@@ -107,15 +107,14 @@ Temp_all <- HOBO_data |>
 ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Origin_sp,
                      ))+
   geom_point()+
-  theme_bw()+
+ theme_bw()+
   labs( title= "Minimum Temperature of Urban Microhabitat",
         x= "Date", 
         y= "Minimum Temperature in Celsius",
         color= "Recording Orgin")+
   theme(plot.title = element_text(hjust = 0.5))
 
-ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,
-                     ))+
+ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,))+
   geom_point()+
   theme_bw()+
    labs( title= "Average Temperature of Urban Microhabitat",
@@ -124,11 +123,9 @@ ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,
         color= "Recording Orgin")+
   theme(plot.title = element_text(hjust = 0.5))
 
-
-ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,
-                     ))+
+ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,))+
   geom_point()+
-  theme_bw()+
+    theme_bw()+
    labs( title= "Maximum Temperature of Urban Microhabitat",
         x= "Date", 
         y= "Maximum Temperature in Celsius",
@@ -167,5 +164,49 @@ anova(lmer_avg)
 anova(lmer_min)
 anova(lmer_max)
 
+
+#beginning of sage's code for table
+library(lme4)
+library(lmerTest)
+library(broom.mixed)
+library(dplyr)
+library(kableExtra)
+
+avg_anova_df <- data.frame(anova(lmer_avg))
+min_anova_df <- data.frame(anova(lmer_min))
+max_anova_df <- data.frame(anova(lmer_max))
+
+anova_results_df <- rbind(avg_anova_df, min_anova_df, max_anova_df)
+
+anova_results_df <- cbind(
+  Term = rownames(anova_results_df),
+  anova_results_df
+)
+
+rownames(anova_results_df) <- NULL
+
+anova_results_df %>%
+  kable("html", 
+        digits = 3,
+          col.names = c(
+      "Term",
+      "Sum Sq",
+      "Mean Sq",
+      "Num DF",
+      "Den DF",
+      "F - value",
+      "P - value"
+    )) %>%
+  kable_styling(
+    bootstrap_options = "striped",
+    full_width = FALSE
+  ) %>%
+  pack_rows("Average temperature", 1, nrow(avg_anova_df)) %>%
+  pack_rows("Minimum temperature", nrow(avg_anova_df) + 1,
+            nrow(avg_anova_df) + nrow(min_anova_df)) %>%
+  pack_rows("Maximum temperature", nrow(avg_anova_df) + nrow(min_anova_df) + 1,
+            nrow(anova_results_df))
+
+```
 
 
