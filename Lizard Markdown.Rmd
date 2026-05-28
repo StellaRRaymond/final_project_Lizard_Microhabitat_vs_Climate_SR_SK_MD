@@ -1,6 +1,6 @@
 ---
 title: "Lizard Markdown"
-author: "StellaRaymond"
+author: "Stella Raymond, Sage Kruleski, and Monique DeMalteris "
 date: "2026-05-14"
 output: html_document
 ---
@@ -26,6 +26,8 @@ sites <- data.frame(
   Longitude = c(-117.07259, -117.15697, -117.31864, -118.11464, -120.66155, -118.44289, -118.02909, -117.71214, -117.70854, -118.87794, -118.70718)
 )
 ```
+
+![Western Fence Lizzard (*Sceloporus occidentalis*) overlooking his kingdom. Photo Credit:James Maughn, LA Times](western_fence_liz.jpeg){width="300"} 
 
 ```{r temp-conversion}
 f_to_c <- function(Far) {
@@ -74,11 +76,19 @@ HOBO_data <- HOBO_data |>
 
 ggplot(HOBO_data, aes(x = Date, y = Temp_min, color = Campus))+
   geom_point()+
-  theme_bw()
+  theme_bw()+
+  labs( title = " Minimum Temperature At Each University ",
+        x= "Date",
+        y= "Minimum Temperature in Celsius")+
+  theme(plot.title = element_text(hjust = 0.5))
 
 ggplot(HOBO_data, aes(x = Date, y = Temp_max, color = Campus))+
   geom_point()+
-  theme_bw()
+ theme_bw()+
+  labs( title= "Maximum Temperature at Each University",
+        x= "Date", 
+        y= "Maximum Temperature in Celsius")+
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
@@ -97,22 +107,35 @@ Temp_all <- HOBO_data |>
 ggplot(Temp_all, aes(x = Date, y = Temp_min, color = Origin_sp,
                      ))+
   geom_point()+
-  theme_bw()
+ theme_bw()+
+  labs( title= "Minimum Temperature of Urban Microhabitat",
+        x= "Date", 
+        y= "Minimum Temperature in Celsius",
+        color= "Recording Orgin")+
+  theme(plot.title = element_text(hjust = 0.5))
 
-ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,
-                     ))+
+ggplot(Temp_all, aes(x = Date, y = Temp_avg, color = Origin_sp,))+
   geom_point()+
-  theme_bw()
+  theme_bw()+
+   labs( title= "Average Temperature of Urban Microhabitat",
+        x= "Date", 
+        y= "Average Temperature in Celsius", 
+        color= "Recording Orgin")+
+  theme(plot.title = element_text(hjust = 0.5))
 
-ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,
-                     ))+
+ggplot(Temp_all, aes(x = Date, y = Temp_max, color = Origin_sp,))+
   geom_point()+
-  theme_bw()
+    theme_bw()+
+   labs( title= "Maximum Temperature of Urban Microhabitat",
+        x= "Date", 
+        y= "Maximum Temperature in Celsius",
+        color= "Recording Orgin")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
 ```{r sages-attempt-at-mapping}
-#slo_county_ebird_rich
+
 lizard_geo <- st_as_sf(sites,coords=c(x="Longitude",y="Latitude"),crs="WGS84") #Converts a regular dataframe → sf (simple features) object
 
 lizard_geo_buf <- lizard_geo |> st_buffer(dist = 2000)
@@ -141,7 +164,7 @@ anova(lmer_avg)
 anova(lmer_min)
 anova(lmer_max)
 
-<<<<<<< HEAD
+
 #beginning of sage's code for table
 library(lme4)
 library(lmerTest)
@@ -185,7 +208,5 @@ anova_results_df %>%
             nrow(anova_results_df))
 
 ```
-=======
 
->>>>>>> 120975114a371fc31317602188e5e667fb42646d
 
