@@ -266,7 +266,7 @@ ggplot()+
 
 ```
 
-
+```{r}
 #beginning of sage's code for table
 library(lme4)
 library(lmerTest)
