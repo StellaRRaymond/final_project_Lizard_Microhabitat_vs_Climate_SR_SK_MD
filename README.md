@@ -62,7 +62,13 @@ Started making a figure for report/presentation
 Week 9.)
 Finalize statistical analysis 
 Interpret statistical test
-Build maps
+Finalized maps with labels 
+Built a table of summary statistics
+Three Model adjusted figures
+Labeled graphs 
+Fixed nomenclature 
+Added photo of study species 
+
 
 Week 10.)
 Wrap up loose ends
